@@ -1,1 +1,1 @@
-from humantime import *
+from .humantime import *

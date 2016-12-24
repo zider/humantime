@@ -7,6 +7,7 @@ datetime和time一直不好用，但是arrow自己用太复杂了
 
 ## TODO List:
 * ~~replace~~
+* ~~__sub__~~
 * timezone
 * local?
 * setup
