@@ -5,11 +5,17 @@
 # __time__ : 16-12-18
 # __version__ : 0.0.1
 
+'''
+先把简单的完成，流程走一遍，再实现更多api之类的吧
+'''
+
 import time
 import datetime
 import dateutil
 
 WEEKDAY = ['Mon', 'Tues', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun']
+ABS_KEYS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond']
+REL_KEYS = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'weeks', 'quarters']
 
 class HumanTime(object):
     def __init__(self, value=0, **kw):
@@ -24,6 +30,7 @@ class HumanTime(object):
                     self._timeinfo = datetime.datetime.strptime(value, kw['tformat'])
                 else:
                     self._timeinfo = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                self._timestamp = self._timeinfo.timestamp()
             except e:
                 raise ValueError('Please enter the right time format!')
         elif isinstance(value, (float, int)):
@@ -34,8 +41,8 @@ class HumanTime(object):
                 pass
         elif isinstance(value, datetime.datetime):
             self._timeinfo = value
-        if 'week' in kw.keys():
-            self.week = kw['week']
+            self._timestamp = value.timestamp()
+        self.weekday = self._timeinfo.weekday()
     
     def when(self, day):
         if isinstance(day, str):
@@ -55,6 +62,17 @@ class HumanTime(object):
             return self.__sub__(datetime.datetime.fromtimestamp(value))
         elif isinstance(value, str)
             pass
+    
+    # Firstly, I think i can not get a better replace() than Arrow.replace
+    # Now, there is a better way...still need test
+    def replace(self, **kw):
+        tmp_kw = {}
+        for key, value in kw.items():
+            if key in ABS_KEYS or key in REL_KEYS:
+                tmp_kw[key] = value
+        tmp_kw.setdefault('months', 0)
+        tmp_kw['months'] += tmp_kw.pop('quarters', 0) * 3
+        self._timeinfo += relativedelta(**tmp_kw)
 
     def __str__(self):
         return '< H-Time {}>'.format(str(self._timeinfo).split('.')[0])
@@ -166,4 +184,4 @@ class HumanTime(object):
         return self._now_time()
 
 def now():
-    return HumanTime().time
+    return HumanTime()
