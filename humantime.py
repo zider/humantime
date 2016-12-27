@@ -13,47 +13,19 @@ import time
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from .util import is_timestamp, is_str
+
 WEEKDAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 ABS_KEYS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond']
 REL_KEYS = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'weeks', 'quarters']
 
 class HumanTime(object):
-    def __init__(self, *arg, **kw):
-        if len(arg) == 0:
-            self._timeinfo = datetime.datetime.now()
-            self._timestamp = time.time()
-            self.tzinfo = time.timezone
-            self.tzname = time.tzname
-        elif len(arg) == 1:
-            value = arg[0]
-            if isinstance(value, str):
-                # time.strftime 根据传入的format，输出用这个format表示的当前时间
-                try:
-                    if 'tformat' in kw.keys():
-                        self._timeinfo = datetime.datetime.strptime(value, kw['tformat'])
-                    else:
-                        if '%' in value:
-                            self._timeinfo = datetime.datetime.strptime(time.strftime(value), value)
-                        else:
-                            self._timeinfo = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-                    self._timestamp = self._timeinfo.timestamp()
-                except e:
-                    raise ValueError('Please enter the right time format!')
-            elif isinstance(value, (float, int)):
-                try:
-                    self._timeinfo = datetime.datetime.fromtimestamp(value)
-                    self._timestamp = value
-                except:
-                   pass
-            elif isinstance(value, datetime.datetime):
-                self._timeinfo = value
-                self._timestamp = value.timestamp()
-        else:
-            try:
-                self._timeinfo = datetime.datetime(*arg)
-                self._timestamp = self._timeinfo.timestamp()
-            except:
-                raise ValueError('tuple of arg is error.')
+    # in arrow, they used factory method to create Arrow class.
+    def __init__(self, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
+        # progress the tzinfo
+
+        self._timeinfo = datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo)
+        self._timestamp = self._timeinfo.timestamp()
     
     def when(self, day):
         if isinstance(day, str):
@@ -181,6 +153,7 @@ class HumanTime(object):
         self._timestamp = value
         self._timeinfo = datetime.datetime.fromtimestamp(self._timestamp)
 
+    # not need?
     @property
     def time(self):
         return self._now_time()
@@ -201,17 +174,18 @@ class HumanTime(object):
     @property
     def yesterday(self):
         tmp = self._timeinfo
-        self._timeinfo = datetime.datetime(tmp.year, tmp.month, tmp.day-1, tmp.hour, tmp.minute, tmp.second, tmp.microsecond)
-        return self._now_time()
+        return HumanTime(tmp.year, tmp.month, tmp.day-1, tmp.hour, tmp.minute, tmp.second, tmp.microsecond)
 
     @property
     def tomorrow(self):
         tmp = self._timeinfo
-        self._timeinfo = datetime.datetime(tmp.year, tmp.month, tmp.day+1, tmp.hour, tmp.minute, tmp.second, tmp.microsecond)
-        return self._now_time()
+        return HumanTime(tmp.year, tmp.month, tmp.day+1, tmp.hour, tmp.minute, tmp.second, tmp.microsecond)
 
     def _now_time(self):
         print(str(self._timeinfo).split('.')[0])
 
-def now():
-    return HumanTime()
+    @classmethod
+    def now(cls, tzinfo=None):
+        utc = datetime.datetime.utcnow()
+        dt = utc.astimezone(dateutil_tz.tzlocal() if tzinfo is None else tzinfo)
+        return cls(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.microsecond, dt.tzinfo)
