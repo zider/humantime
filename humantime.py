@@ -11,13 +11,19 @@
 
 import time
 import datetime
+import dateparser
+import dateutil
+
 from dateutil.relativedelta import relativedelta
 
 from .util import is_timestamp, is_str
+from .factory import TimeFactory
 
 WEEKDAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 ABS_KEYS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond']
 REL_KEYS = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'weeks', 'quarters']
+
+_factory = TimeFactory()
 
 class HumanTime(object):
     # in arrow, they used factory method to create Arrow class.
@@ -27,17 +33,6 @@ class HumanTime(object):
         self._timeinfo = datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo)
         self._timestamp = self._timeinfo.timestamp()
     
-    def when(self, day):
-        if isinstance(day, str):
-            if day == 'yesterday':
-                self.yesterday()
-            elif day == 'tomorrow':
-                self.tomorrow()
-            '''
-            # more info example
-            elif day == '1 months age':
-                pass
-            '''
     def between(self, value):
         if isinstance(value, (HumanTime, datetime.datetime)):
             return self.__sub__(value)
@@ -159,11 +154,15 @@ class HumanTime(object):
         return self._now_time()
 
     @time.setter
-    def time(self, value, tformat=''):
-        if tformat == '':
-            self.__init__(value=value)
-        else:
-            self.__init__(value=value, tformat=tformat)
+    def time(self, *args, **kw):
+        ''' 
+        用factorymethod来做的话
+        这里应该通过向factory传入相关数据
+        然后返回一个HumanTime类，再将这个类的数据传入
+        '''
+        date = datetime.fromtimestamp(_factory.get(*args, **kw)._timestamp)
+        self._timeinfo = date
+        self._timestamp = date.timestamp()
 
     @property
     def weekday(self):
@@ -189,3 +188,12 @@ class HumanTime(object):
         utc = datetime.datetime.utcnow()
         dt = utc.astimezone(dateutil_tz.tzlocal() if tzinfo is None else tzinfo)
         return cls(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.microsecond, dt.tzinfo)
+
+    @classmethod
+    def when(cls, value, tzinfo='UTC'):
+        if is_str(value):
+            dt = dateparser.parse(value, settings={})
+        if dt is not None:
+            return cls(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond)
+        else:
+            raise ValueError('Your input datetime is invalid.')

@@ -8,10 +8,11 @@ datetime和time一直不好用，但是arrow自己用太复杂了
 * ~~replace~~
 * ~~__sub__~~
 * timezone
-* factory
+* ~~factory~~
 * span
 * local?
 * setup
+* test
 * **import between 2 and 3**
 * help and note
 * pypi
