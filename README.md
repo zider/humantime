@@ -11,7 +11,7 @@ datetime和time一直不好用，但是arrow自己用太复杂了
 * ~~factory~~
 * span
 * local?
-* setup
+* ~~setup~~
 * test
 * **import between 2 and 3**
 * help and note
